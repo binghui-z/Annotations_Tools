@@ -1,8 +1,38 @@
-# 3D Hands for All
-<img src="imgs/UI_sample.png" width="640">
+# Annotations Tools
+<img src="imgs/GUI.png" width="640">
 
-这个仓库介绍了一种三维手姿势调整工具，只需单张RGB图像就可以进行姿势的注释及调整。该工具能够提供任意数量的2D关键点，并自动优化MANO手姿势以适合提供的关键点。它还允许控制所有关节旋转（具有物理约束），以实现更精细的注释。此外，该仓库集成了预训练的2D和3D模型，支持自动注释。然而，网络估计的二维/三维关键点可能并不是特别理想，因此可能需要手动调整以获得更高的精度。
+本仓库修改自[3D Hands for All](https://github.com/AlextheEngineer/3DHandsForAll),感谢原作者开源的这项工作！
 
+本仓库介绍了一种三维手姿势调整工具，只需单张RGB图像就可以进行姿势的注释及调整。该工具能够提供任意数量的2D关键点，并自动优化MANO手姿势以适合提供的关键点。它还允许控制所有关节旋转（具有物理约束），以实现更精细的注释。此外，该仓库集成了预训练的2D和3D模型，支持自动注释，目前[HRNet] 和 [SRHandNet]()已经成功部署，并集成了用于估计mask的[SegNet]。然而，网络估计的二维/三维关键点可能并不是特别理想，因此可能需要手动调整以获得更高的精度。
+
+## 环境配置及模型下载
+1. 下载[MANO](https://github.com/hassony2/manopth),并将根文件夹移动到“models/MANO_layer”。“setup.py”文件应位于"models/MANO_layer/manopth/setup.py"。将anaconda命令行切换至与“setup.py”同级目录，然后运行：
+  > pip install .
+
+2. 下载MANO pickle
+- Go to [MANO website](http://mano.is.tue.mpg.de/)
+- Create an account by clicking *Sign Up* and provide your information
+- Download Models and Code (the downloaded file should have the format `mano_v*_*.zip`). Note that all code and data from this download falls under the [MANO license](http://mano.is.tue.mpg.de/license).
+- unzip and copy the `models` folder into the `manopth/mano` folder
+- Your folder structure should look like this:
+```
+manopth/
+  mano/
+    models/
+      MANO_LEFT.pkl
+      MANO_RIGHT.pkl
+      ...
+  manopth/
+    __init__.py
+    ...
+```
+
+3. 下载需要用到的权重文件，并把它们移动至：“models_saved”目录下；
+
+* 在线下载
+  > Model 2D (https://byu.box.com/s/ygpnrc7d4a6lh7pxoktdaecc0tk4473m); Model 3D 3rd-person (https://byu.box.com/s/tigqgfruupnb6hodkms63qfqwal9xmp8); Model 3D egocentric (https://byu.box.com/s/byznwg5lvi7c4qmhre2g0fkbrnd7nxd0)
+
+* 网盘下载
 
 ## 怎么使用
 <img src="imgs/general_intro.png" width="640">

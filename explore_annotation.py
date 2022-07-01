@@ -994,9 +994,9 @@ class pose_annotation_app:
                 monokpts21_maps = pred64_np[:21] # (21, 64, 64)
                 kpt21_centers = get_srnet_2d_kpts(monokpts21_maps, img_h=params.IMG_SIZE, img_w=params.IMG_SIZE, \
                     num_keypoints=params.NUM_KPTS)
-                joints_image = plot_heatmap(to_cpu(img_input_tensor[0]),kpt21_centers[:,:2]) 
-                cv2.imshow("joints",joints_image)
-                cv2.waitKey(-1)
+                # joints_image = plot_heatmap(to_cpu(img_input_tensor[0]),kpt21_centers[:,:2]) 
+                # cv2.imshow("joints",joints_image)
+                # cv2.waitKey(-1)
                 for joint_selected, kpt_2d in enumerate(kpt21_centers):
                     row, col = kpt_2d
                     self.add_kpt_2d_annotation_right(False, joint_selected, row, col)
