@@ -2,6 +2,7 @@ import numpy as np
 
 MANO_PATH = 'models/MANO_layer/manopth/mano/models'
 MODEL_2D_PATH = 'models_saved/omnihands_HRNet_2d_pretrained.pth.tar'
+MODEL_SRNet_PATH = "models_saved/hand.pt"
 MODEL_MASK_PATH = "models_saved/HandSeg-ScaleUp-HandSegNet_ScaleUp_check053.pth"
 MODEL_3D_3RD_PATH = 'models_saved/mano3dhands_3rd_person_resnet_pose_3d_pretrained.pth.tar'
 MODEL_3D_EGO_PATH = 'models_saved/mano3dhands_egocentric_resnet_pose_3d_pretrained.pth.tar'

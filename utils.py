@@ -102,7 +102,17 @@ def get_2d_kpts(heatmaps, img_h, img_w, num_keypoints):
         kpts[idx] = np.array([row, col])
     
     return kpts
+
+def get_srnet_2d_kpts(heatmaps, img_h, img_w, num_keypoints):
+    kpts = np.zeros((num_keypoints, 2))
+    for idx, m in enumerate(heatmaps):
+        h, w = np.unravel_index(m.argmax(), m.shape)
+        col = int(w * img_w / m.shape[1])
+        row = int(h * img_h / m.shape[0])
+        kpts[idx] = np.array([row, col])
     
+    return kpts
+
 def clip_mano_hand_rot(rot_tensor):
     rot_min_tensor = torch.tensor([
         -10.0, -10.0, -10.0
@@ -266,3 +276,59 @@ def viewJointswObj(jointCN_Lst, manoDic_Lst, with_axis = True):
     # o3d.io.write_triangle_mesh("hand_mesh.ply", mano_mesh)
     # o3d.io.write_triangle_mesh("obj_mesh.ply", obj_mesh)
     o3d.visualization.draw_geometries(geo_Lst) # width = 640, height = 480, window_name = window_name
+
+def get_localMaxima(heatmap2D, neighborhood_size = 5, threshold = 0.2):
+    # https://stackoverflow.com/questions/9111711/get-coordinates-of-local-maxima-in-2d-array-above-certain-value
+    import scipy
+    import scipy.ndimage as ndimage
+    import scipy.ndimage.filters as filters
+    heatmap2D_max = filters.maximum_filter(heatmap2D, neighborhood_size)
+    maxima = (heatmap2D == heatmap2D_max)
+    heatmap2D_min = filters.minimum_filter(heatmap2D, neighborhood_size)
+    diff = ((heatmap2D_max - heatmap2D_min) > threshold)
+    maxima[diff == 0] = 0
+    labeled, num_objects = ndimage.label(maxima)
+    slices = ndimage.find_objects(labeled)
+    x, y = [], []
+    centers = []
+    for dy,dx in slices:
+        x_center = (dx.start + dx.stop - 1)/2
+        y_center = (dy.start + dy.stop - 1)/2
+        centers.append([x_center, y_center])
+    if len(centers) == 0:
+        centers.append([0.0, 0.0]) # deal with the all-zero bug. 
+    centers = np.array(centers)
+    return centers
+
+def plot_heatmap(netin_img, kpt21_centers):
+    '''
+    netin_img : numpy array (C, H, W)
+    '''
+
+    parent_Dic = {}
+    for i in range(21):
+        if i == 0: parent_Dic[i] = -1
+        elif i % 4 == 1: parent_Dic[i] = 0
+        else: parent_Dic[i] = i-1
+
+    if netin_img.shape[0] == 3:
+        netin_img = netin_img.transpose(1,2,0) # CHW(012) -> HWC (1,2,0); RGB
+
+    plotted_img = None
+    plotted_img = netin_img.copy()
+    # cv2.rectangle(plotted_img, )
+    color = (np.random.uniform(0, 1, 3) * 255).astype(np.int32).tolist()
+    
+    for kpt21_index, kpt21_center_i in enumerate(kpt21_centers):
+        kpt21_center_i = kpt21_center_i.astype(np.int32).tolist()
+        cv2.circle(plotted_img, tuple(kpt21_center_i), 2, tuple(color), thickness = -1)
+
+        parent_index = parent_Dic[kpt21_index]
+        if parent_index >= 0:
+            kpt21_parent_i = kpt21_centers[parent_index].astype(np.int32).tolist()
+            cv2.line(plotted_img, tuple(kpt21_center_i), tuple(kpt21_parent_i), tuple(color))
+
+    # cv2.imshow("cv2 view", plotted_img[:, :, [2,1,0]])
+    # cv2.imshow("cv2 view", plotted_img)
+    # cv2.waitKey(-1)
+    return plotted_img# .transpose(2,0,1) # HWC(012) -> CHW (201); RGB

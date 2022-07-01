@@ -11,6 +11,9 @@ import mano_wrapper
 from utils import *
 import params
 
+to_cpu = lambda tensor: tensor.detach().cpu().numpy()
+
+
 class pose_annotation_app:
     def __init__(self, args, samples_dir_path="sample_imgs"):
         self.args = args
@@ -26,6 +29,7 @@ class pose_annotation_app:
         
     def init_models(self):
         self.init_model_2d()
+        self.init_model_srnet_2d()
         self.init_model_segnet()
         self.init_model_3d_3rd()
         self.init_model_3d_ego()
@@ -463,10 +467,14 @@ class pose_annotation_app:
             height = button_h//3, width = button_w, command = self.button_toggle_callback)
         button_toggle.pack(padx = scale_pad, pady = scale_pad, side = tk.LEFT)
         
-        button_pred_2d = tk.Button(panel_op_layer1_buttons, text ='Pred 2D', bg = '#4eded9', \
+        button_pred_2d = tk.Button(panel_op_layer1_buttons, text ='HRNet 2D', bg = '#4eded9', \
             height = button_h//3, width = button_w, command = self.button_pred_2d_callback)
         button_pred_2d.pack(padx = scale_pad, pady = scale_pad, side = tk.LEFT)
         
+        button_srnet_2d = tk.Button(panel_op_layer1_buttons, text ='SRNet 2D', bg = '#00FF00', \
+            height = button_h//3, width = button_w, command = self.button_SRNet_callback)
+        button_srnet_2d.pack(padx = scale_pad, pady = scale_pad, side = tk.LEFT)
+
         button_pred_mask = tk.Button(panel_op_layer1_buttons, text ='Pred mask', bg = '#ffff33', \
             height = button_h//3, width = button_w, command = self.button_pred_mask_callback)
         button_pred_mask.pack(padx = scale_pad, pady = scale_pad, side = tk.LEFT)
@@ -519,6 +527,23 @@ class pose_annotation_app:
             self.model_2d = torch.nn.DataParallel(model, device_ids=[0]).cuda()
             self.model_2d.eval()
             print('Model 2D succesfully loaded')
+
+    def init_model_srnet_2d(self):
+        from models.SRHandNet.SRNet_model import SRNet
+        
+        srnet_model = SRNet()
+        pretrained_srnet_2d_path = params.MODEL_SRNet_PATH
+        if not os.path.exists(pretrained_srnet_2d_path):
+            self.model_srnet = None
+            print('Model srnet 2D not found : {}'.format(pretrained_srnet_2d_path))
+        else:
+            print('Loading {}'.format(pretrained_srnet_2d_path))
+            print('model_srnet_2d #params: {}'.format(sum(p.numel() for p in srnet_model.parameters())))
+            # model.load_state_dict(torch.load(pretrained_srnet_2d_path))
+            srnet_model.load_state_dict(torch.jit.load(pretrained_srnet_2d_path).state_dict())
+            self.model_srnet = srnet_model.cuda()
+            self.model_srnet.eval()
+            print('Model srnet succesfully loaded')
         
     def init_model_segnet(self):
         from models.SegNet.SegNet_model import HandSegNet_ScaleUp__Deploy
@@ -934,11 +959,49 @@ class pose_annotation_app:
                 heatmaps_np = heatmaps_pred[0].cpu().data.numpy()
                 kpts_2d = get_2d_kpts(heatmaps_np, img_h=params.IMG_SIZE, img_w=params.IMG_SIZE, \
                     num_keypoints=params.NUM_KPTS)
+                # joints_image = plot_heatmap(to_cpu(img_input_tensor[0]),kpts_2d[:,:2]) 
+                # cv2.imshow("joints",joints_image)
+                # cv2.waitKey(-1)
                 for joint_selected, kpt_2d in enumerate(kpts_2d):
                     row, col = kpt_2d
                     self.add_kpt_2d_annotation_right(False, joint_selected, row, col)
                 return kpts_2d
 
+    def button_SRNet_callback(self):
+        if self.model_srnet is None:
+            print('Model srnet 2D not loaded.')
+            return None
+        else:
+            if self.crop_center is None:
+                print('Error, right click to generate bounding box first.')
+                return None
+            else:
+                img_resized = cv2.resize(self.img_right, (params.CROP_SIZE_PRED, params.CROP_SIZE_PRED))
+                img_transposed = img_resized.transpose(2, 0, 1).astype(np.float32)
+                img_input_tensor = normalize_tensor(torch.from_numpy(img_transposed), 128.0, 256.0)\
+                    .unsqueeze_(0).cuda()
+                predMap_Tsor_bacth_i_Lst = self.model_srnet(img_input_tensor)
+                pred64_Tsor_batch = predMap_Tsor_bacth_i_Lst[-1]
+                pred64_np = to_cpu(pred64_Tsor_batch.squeeze(0))
+
+                #! localMaxima
+                # monokpts21_maps = pred64_np[:21] # (21, 64, 64)
+                # kpt21_centers = [get_localMaxima(monokpt_map_i)[0] for monokpt_map_i in monokpts21_maps]
+                # netin_width = 256
+                # kpt21_centers = np.array(kpt21_centers) * netin_width / pred64_np.shape[1] 
+
+                #! 单手
+                monokpts21_maps = pred64_np[:21] # (21, 64, 64)
+                kpt21_centers = get_srnet_2d_kpts(monokpts21_maps, img_h=params.IMG_SIZE, img_w=params.IMG_SIZE, \
+                    num_keypoints=params.NUM_KPTS)
+                joints_image = plot_heatmap(to_cpu(img_input_tensor[0]),kpt21_centers[:,:2]) 
+                cv2.imshow("joints",joints_image)
+                cv2.waitKey(-1)
+                for joint_selected, kpt_2d in enumerate(kpt21_centers):
+                    row, col = kpt_2d
+                    self.add_kpt_2d_annotation_right(False, joint_selected, row, col)
+                return kpt21_centers
+                
     def button_pred_mask_callback(self):
         if self.model_mask is None:
             print('Model mask not loaded.')
@@ -953,10 +1016,6 @@ class pose_annotation_app:
             self.mask = np.expand_dims(mask_result, axis=-1) * self.img_left #np.expand_dims(mask_result, axis=-1)
 
             self.update_img_display()
-
-            # cv2.imshow("mask",masself.maskk_np)
-            # cv2.waitKey(-1)
-            # return mask_np  
 
     def button_fit_root_callback(self):
         self.mano_fit_tool.fit_xyz_root_annotate()
