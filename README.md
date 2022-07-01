@@ -30,7 +30,9 @@ manopth/
 3. 下载需要用到的权重文件，并把它们移动至：“models_saved”目录下；
 
 * 在线下载
-  > Model 2D (https://byu.box.com/s/ygpnrc7d4a6lh7pxoktdaecc0tk4473m); Model 3D 3rd-person (https://byu.box.com/s/tigqgfruupnb6hodkms63qfqwal9xmp8); Model 3D egocentric (https://byu.box.com/s/byznwg5lvi7c4qmhre2g0fkbrnd7nxd0)
+  > Model 2D (https://byu.box.com/s/ygpnrc7d4a6lh7pxoktdaecc0tk4473m) 
+  > Model 3D 3rd-person (https://byu.box.com/s/tigqgfruupnb6hodkms63qfqwal9xmp8)
+  > Model 3D egocentric (https://byu.box.com/s/byznwg5lvi7c4qmhre2g0fkbrnd7nxd0)
 
 * 网盘下载
 
@@ -90,5 +92,28 @@ MANO一共51维. 前3个值包含全局3D根关节位置（x：向右增加。y�
 
 该数组的形状为[21，2]，其中包含所有21个关节的2D关节位置（行和列用百分比表示，因此它们对图像缩放不变）。
 
-## License
-This tool can be used freely for scientific or commercial purposes. If you use this tool for data annotation of your research, please cite the corresponding [paper](https://arxiv.org/abs/2206.04927).
+## Citation
+更多细节可以参考如下论文：
+```
+@article{lin2022ego2handspose,
+  title={Ego2HandsPose: A Dataset for Egocentric Two-hand 3D Global Pose Estimation},
+  author={Lin, Fanqing and Martinez, Tony},
+  journal={arXiv preprint arXiv:2206.04927},
+  year={2022}
+}
+@article{wang2019srhandnet,
+  title={Srhandnet: Real-time 2d hand pose estimation with simultaneous region localization},
+  author={Wang, Yangang and Zhang, Baowen and Peng, Cong},
+  journal={IEEE transactions on image processing},
+  volume={29},
+  pages={2977--2986},
+  year={2019},
+  publisher={IEEE}
+}
+@article{sun2019high,
+  title={High-resolution representations for labeling pixels and regions},
+  author={Sun, Ke and Zhao, Yang and Jiang, Borui and Cheng, Tianheng and Xiao, Bin and Liu, Dong and Mu, Yadong and Wang, Xinggang and Liu, Wenyu and Wang, Jingdong},
+  journal={arXiv preprint arXiv:1904.04514},
+  year={2019}
+}
+```
