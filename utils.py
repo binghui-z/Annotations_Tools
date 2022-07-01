@@ -4,6 +4,7 @@ import math
 import torch
 import numpy as np
 import params
+import open3d as o3d
 
 def load_img_mano(img_path):
     img_orig = cv2.imread(img_path)
@@ -228,3 +229,40 @@ def get_crop_attr_from_kpts_2d(kpts_2d_glob):
         np.max(kpts_2d_glob[:, 1]) - np.min(kpts_2d_glob[:, 1]))
     crop_size = round(max_dist * 1.5)
     return crop_center, crop_size
+
+def viewJointswObj(jointCN_Lst, manoDic_Lst, with_axis = True):
+
+    COLOR_LST = [[0 ,255 ,255]] +\
+                    [[255, 0, 255]]*4 + [[255, 0,   0]] *4 + [[0, 255, 0]]*4 + \
+                        [[255, 255, 0]]*4 + [[0, 0, 255]]*4
+    lines_Lst = [
+                [0, 1], [1 , 2], [2 , 3], [3 , 4],
+                [0, 5], [5, 6], [6 , 7], [7 , 8],
+                [0, 9], [9, 10], [10,11], [11,12],
+                [0,13], [13,14], [14,15], [15,16],
+                [0,17], [17,18], [18,19], [19,20]
+            ]
+
+    #! visual joints and skeleton
+    geo_Lst = []
+    for jointCN in jointCN_Lst:
+        skel_pcd = o3d.geometry.PointCloud()
+        skel_pcd.points = o3d.utility.Vector3dVector(jointCN)
+        skel_pcd.colors = o3d.utility.Vector3dVector(np.array(COLOR_LST)[:, [2,1,0]]/255.0) # to rgb, [0,1]
+
+        skel_ls = o3d.geometry.LineSet()
+        skel_ls.points = skel_pcd.points
+        skel_ls.lines = o3d.utility.Vector2iVector(np.array(lines_Lst))
+        geo_Lst += [skel_pcd, skel_ls]
+
+    #! visual mesh
+    mesh = o3d.geometry.TriangleMesh()
+    mesh.vertices = o3d.utility.Vector3dVector(manoDic_Lst[0])
+    mesh.triangles = o3d.utility.Vector3iVector(manoDic_Lst[1])
+    mesh.compute_vertex_normals()
+    mesh.paint_uniform_color(np.array([0,1,0]))
+    geo_Lst += [mesh]
+
+    # o3d.io.write_triangle_mesh("hand_mesh.ply", mano_mesh)
+    # o3d.io.write_triangle_mesh("obj_mesh.ply", obj_mesh)
+    o3d.visualization.draw_geometries(geo_Lst) # width = 640, height = 480, window_name = window_name

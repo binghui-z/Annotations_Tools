@@ -1,88 +1,64 @@
 # 3D Hands for All
 <img src="imgs/UI_sample.png" width="640">
 
-We introduce a 3D hand pose annotation tool that can annotate using a single RGB image. This tool enables you to provide an arbitrary number of 2D keypoints and automatically optimize the MANO hand pose to fit the provided keypoints. It also allows full control of all joint rotations (with physical constraints) for more refined annotation. In addition, we provide pretrained 2D and 3D models to enable automatic annotation. However, manual refinement might be needed for higher accuracy as the estimated 2D/3D keypoints can be imperfect.
+这个仓库介绍了一种三维手姿势调整工具，只需单张RGB图像就可以进行姿势的注释及调整。该工具能够提供任意数量的2D关键点，并自动优化MANO手姿势以适合提供的关键点。它还允许控制所有关节旋转（具有物理约束），以实现更精细的注释。此外，该仓库集成了预训练的2D和3D模型，支持自动注释。然而，网络估计的二维/三维关键点可能并不是特别理想，因此可能需要手动调整以获得更高的精度。
 
-Existing annotation methods rely on multi-view settings or depth cameras. Consequently, the collected color-based hand images are captured with laboratory environments as background. The limitation in quantity and diversity of 3D hand pose data in the community makes it challenging for learning-based models to generalize to scenes in the wild. This tool gives everyone the ability to obtain 3D hand pose data using monocular RGB images. It is used in our paper [Ego2HandsPose: A Dataset for Egocentric Two-hand 3D Global Pose Estimation](https://arxiv.org/abs/2206.04927) for the annotation of the Ego2Hands dataset, which can be used to composite two-hand training images with significantly higher quantity and diversity. Click here for more details on [Ego2Hands](https://github.com/AlextheEngineer/Ego2Hands).
 
-Additional code and data will be released soon.
-
-## Environment Setup
-* We used the following steps to set up the proper environment in Anaconda on a Windows 10 machine:
-  > conda create --name hand3d_env python=3.7\
-  > conda activate hand3d_env\
-  > conda install -c conda-forge opencv\
-  > conda install pytorch torchvision torchaudio cudatoolkit=10.1 -c pytorch (see https://pytorch.org/ for a proper setting specific for your machine)\
-
-* To install MANO hand, download the repository from https://github.com/hassony2/manopth and move the root folder into "models/MANO_layer". The "setup.py" file should be located at "models/MANO_layer/manopth/setup.py". To install, navigate to the same directory "setup.py" is located in and run
-  > pip install .
-
-* To install pytorch3d, please follow the official instructions [here](https://github.com/facebookresearch/pytorch3d/blob/main/INSTALL.md).
-
-## Download Pretrained Models
-* Download the following models and place them in the "models_saved" directory.
-
-* Model 2D (https://byu.box.com/s/ygpnrc7d4a6lh7pxoktdaecc0tk4473m)
-
-* Model 3D 3rd-person (https://byu.box.com/s/tigqgfruupnb6hodkms63qfqwal9xmp8)
-
-* Model 3D egocentric (https://byu.box.com/s/byznwg5lvi7c4qmhre2g0fkbrnd7nxd0)
-
-## Usage
+## 怎么使用
 <img src="imgs/general_intro.png" width="640">
 
-Run the following command to load the sample images from various datasets for annotation. You should see an UI similar to the image above.
+运行以下命令从各种数据集中加载示例图像，可以看到如下GUI界面
   > python pose_annotator.py
 
-The original image is padded to be square (shown in #6), which matches the image resolution of the rendered MANO hand image (shown in #7). The goal is to generate a MANO hand model that matches the hand in the image. Since the camera intrinsics are unknown, the resulting MANO hand's exact global 3D joint locations are based on the camera intrinsics of the rendering camera.
+原始图像填充为正方形（如图6所示），渲染得到的手与图像分辨率匹配（如图7所示），我们的目标是生成与图像中的手匹配的MANO手模型。由于摄像机内参未知，因此生成的MANO-hand全局3D关节位置基于渲染摄像机的内参。
 
-* Note that we only support the right hand. For annotating the left hand, simply click the "Flip" button. Hand side info will be recorded in file name when saving.
+* 目前这个仓库只支持右手，如果相对左手进行标记，可以点击“Flip”按钮；在保存时，手的手性会被记录在文件名中
 
-### 2D Keypoint Annotation
-  * Manual Mode
+### 2D Keypoints Annotation
+  * 手动模式
 
-Although the MANO parameters are controllable using the sliders that control the joint rotations (e.g. #2, #4, #5) and root joint location (#3), we want to minimize the need for manual annotation. To this end, the tool enables the user to annotate 2D keypoints by first using the joint selection slider (#1), then click either the original image (#6) or the magnified image (#8). To select the magnifying region, simply right click on the original image (#6) and scroll to adjust the cropping size. 
+虽然使用控制关节旋转（例如#2、#4、#5）和根关节位置（#3）的滑块可以控制MANO参数，但为了尽量减少手动注释的需要，该工具允许使用者首先使用关节选择滑块（#1），然后单击原始图像（#6）或放大图像（#8），对二维关键点进行注释。要选择放大区域，只需右键单击原始图像（#6）并滚动以调整裁剪大小。
 
-  * Auto Mode
+  * 自动模式
 
-To simplify the 2D keypoint annotation process, we pretrained a HRNet on Ego2HandsPose, HIU-DMTL and FreiHand. To automatically predict the 2D keypoints, simply provide the hand detection bounding box and click "Pred 2D". Manual refinement of certain keypoints might be needed.
+为了简化二维关键点注释过程，我们在Ego2HandsPose、HIU-DMTL和FreiHand上预训练了HRNet。要自动预测2D关键点，只需提供手部检测边界框并单击“Pred 2D”。可能需要手动进一步调整某些关键点。
 
 ### 3D Hand Fitting
-  * Manual Mode
+  * 手动模式
 
-Given an arbitrary number of annotated 2D keypoints, follow these steps:
+给定任意数量的带注释的二维关键点，请执行以下步骤：
 
-1. button "Fit root" fits the hand using only the wrist joint (joint#0 needs to be annotated)
+1. 按钮“Fit root”仅使用腕关节fitting手（关节#0需要注释）
 
-2. To fit the MANO hand from the default pose, you would first need to adjust the global orientation sliders (shown in #2) to give the hand a good initial point. 
+2. 要从默认姿势调整MANO手，首先需要调整全局方向滑块（如#2所示），以给手一个良好的初始点。
 
-3. With a good initial pose, you can then click "Fit 2D" to gradient descent into the global minimum given the annotated 2D keypoints. Due to the lack of depth info, sometimes there are two plausible solution for the same set of 2D keypoints. In this case, you can either manually rotate the finger(s) to be closer to the real solution and then press "Fit 2D". 
+3. 有了一个好的初始姿势，然后可以单击“Fit 2D”，在给定注释的2D关键点的情况下，将下降梯度到全局最小值。由于缺乏深度信息，有时对于同一组2D关键点有两种可行的解决方案。在这种情况下，可以手动旋转手指以更接近真实解，然后按“Fit 2D”。
 
-4. Use "Toggle" button to see if the rendered hand overlays with the hand in the image well. When automatic fitting does not yield a perfect solution, the user can always manually adjust the joint rotations for some small final adjustments. 
+4. 使用 "Toggle" 按钮查看渲染的手是否与图像中的手很好地重叠。当自动拟合不能产生完美的解决方案时，用户始终可以手动调整关节旋转以进行一些小的最终调整。
 
-5. Final slight adjustments using manual refinement. For detailed control of each finger, the 3 sliders on the left control the 3D rotation of the first joint of the specific finger (shown in #4). The 3 sliders on the right control the 1D rotation of the first, second and third joint of the specific finger. 
+5. 使用手动细化进行最终微调。对于每个手指的详细控制，左侧的3个滑块控制特定手指第一个关节的3D旋转（如#4所示）。右侧的3个滑块控制特定手指第一、第二和第三个关节的1D旋转。
 
-  * Auto Mode
+  * 自动模式
 
-To simplify the overall fitting process, we pretrained a custom Resnet on MANO3DHands (see paper) for 3D canonical pose estimation. After a hand detection box is provided, you can simply click "Pred 3D 3rd" or "Pred 3D ego" (trained on MANO3DHands's 3rd person and egocentric version respectively) to automatically predict the 2D keypoints, 3D canonical keypoints, and fit the hand. "Pred 3D 3rd" works well in general for all viewpoints. "Pred 3D ego" should work better for egocentric viewpoint. Manual refinement might be needed depending on the 2D/3D estimation accuracy. 
+为了简化整个拟合过程，我们在MANO3DHands上预训练了一个用于三维标准位姿估计的自定义Resnet。提供手部检测框后，您只需单击“Pred 3D 3rd”或“Pred 3D ego”（分别在MANO3DHands的第三人称和自我中心版本上训练）即可自动预测2D关键点、3D规范关键点，并fitting手部。“Pred 3D 3rd”通常适用于所有视点；“Pred 3D自我”更适合以自我为中心的视点。根据2D/3D估计精度，可能需要手动细化。
 
-### Final Validation
-It can be hard to thoroughly examine the 3D pose from a single view. To validate the hand pose from other views, click the "freeze" button next to the global orientation sliders (#2). You can now change the global orientation freely to view the hand pose from different angles. After validation, click the "restore" button to restore the previously saved global orientation.
+### 最终验证
+从单个视图检查3D pose时比较困难的。要从其他视图验证手的姿势，请单击全局方向滑块（#2）旁边的“冻结”按钮。现在可以自由更改全局方向，从不同角度查看手的姿势。验证后，单击“恢复”按钮以恢复先前保存的全局方向。
 
-### Saving
-To save the hand pose, click the "Save" button, which will save the MANO parameters, 3D global joint locations and 2D image joint locations in the same directory for the input images.
+### 保存
+要保存手部姿势，请单击“save”按钮，该按钮将在输入图像的同一目录中保存MANO参数文件、3D全局关节位置和2D图像关节位置。
 
   * MANO file
 
-This ndarray contains 51 values. The first 3 values contain the global 3D root joint location (x: increases going right. y: increases going down. z: increases going away from camera origin). The next 3 values contain the global orientation for the hand pose (rotational values for the root joint). The remaining 45 values contain rotations for 15 hand joints (finger tip does not have a rotation).
+MANO一共51维. 前3个值包含全局3D根关节位置（x：向右增加。y：向下增加。z：远离相机原点增加）；接下来的3个值表示手姿势的全局方向（根关节的旋转值）；其余45个值表示15个手关节的旋转（指尖没有旋转）
 
   * 3D Global Keypoints file
 
-This ndarray has shape of [21, 3], which contains the 3D global joint location (in cm) for all 21 joints.
+该数组的形状为[21，3]，其中包含所有21个关节的三维全局关节位置（以厘米为单位）。
 
   * 2D Global Keypoints file
 
-This ndarray has shape of [21, 2], which contains the 2D joint location ((row, col) in percentages, so they are invariant to image scaling) for all 21 joints. 
+该数组的形状为[21，2]，其中包含所有21个关节的2D关节位置（行和列用百分比表示，因此它们对图像缩放不变）。
 
 ## License
 This tool can be used freely for scientific or commercial purposes. If you use this tool for data annotation of your research, please cite the corresponding [paper](https://arxiv.org/abs/2206.04927).

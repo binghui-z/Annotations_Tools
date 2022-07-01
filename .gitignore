@@ -1,1 +1,7 @@
-.
+**/*.pyc
+models_saved/*.pth
+models_saved/*.pt
+models_saved/*.onnx
+models_saved/*.pth.tar
+
+**/*.npy

@@ -2,6 +2,7 @@ import numpy as np
 
 MANO_PATH = 'models/MANO_layer/manopth/mano/models'
 MODEL_2D_PATH = 'models_saved/omnihands_HRNet_2d_pretrained.pth.tar'
+MODEL_MASK_PATH = "models_saved/HandSeg-ScaleUp-HandSegNet_ScaleUp_check053.pth"
 MODEL_3D_3RD_PATH = 'models_saved/mano3dhands_3rd_person_resnet_pose_3d_pretrained.pth.tar'
 MODEL_3D_EGO_PATH = 'models_saved/mano3dhands_egocentric_resnet_pose_3d_pretrained.pth.tar'
 
@@ -18,7 +19,7 @@ NUM_KPTS = 21
 
 NUM_ROT_TICKS = 100
 CROP_SIZE_DEFAULT = 150
-CROP_SIZE_PRED = 224
+CROP_SIZE_PRED = 256
 CROP_STRIDE_PRED = 4
 HEATMAP_SIGMA = 4.0
 CROP_SIZE_TICK_SIZE = 10
