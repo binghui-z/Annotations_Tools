@@ -35,7 +35,7 @@ manopth/
 * 网盘下载
 
 ## 怎么使用
-<img src="imgs/general_intro.png" width="640">
+<img src="imgs/use.png" width="640">
 
 运行以下命令从各种数据集中加载示例图像，可以看到如下GUI界面
   > python pose_annotator.py
