@@ -35,6 +35,7 @@ manopth/
   > Model 3D egocentric (https://byu.box.com/s/byznwg5lvi7c4qmhre2g0fkbrnd7nxd0)
 
 * 网盘下载
+  > To release ... 
 
 ## 怎么使用
 <img src="imgs/use.png" width="640">
